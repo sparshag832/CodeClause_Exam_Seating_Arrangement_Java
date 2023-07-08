@@ -6,19 +6,27 @@ import javax.swing.JScrollBar;
 import javax.swing.JScrollPane;
 import javax.swing.border.EmptyBorder;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableModel;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Desktop;
+
 import javax.swing.JTable;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.SwingConstants;
 import javax.swing.JTextField;
+import javax.print.attribute.standard.SheetCollate;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
+import javax.swing.JFileChooser;
+
 import java.awt.Font;
 import java.awt.event.ActionListener;
+import java.io.File;
+import java.io.FileWriter;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -66,7 +74,7 @@ public class Seat_Allocation extends JFrame {
 		
 		try
 		{
-		String a= "Select * from seatallocation";
+		String a= "SELECT * FROM seatallocation ORDER BY ROLL_NO ASC;";
 		Class.forName("com.mysql.cj.jdbc.Driver");
 		Connection connection = DriverManager.getConnection("jdbc:mysql://localhost/seating?user=root&password=root");
 		Statement statement = connection.createStatement();
@@ -101,10 +109,28 @@ public class Seat_Allocation extends JFrame {
 	
 }
 	
+	public void export(JTable table, File file){
+	    try
+	    {
+	      TableModel m = table.getModel();
+	      FileWriter fw = new FileWriter(file);
+	      for(int i = 0; i < m.getColumnCount(); i++){
+	        fw.write(m.getColumnName(i) + "\t");
+	      }
+	      fw.write("\n");
+	      for(int i=0; i < m.getRowCount(); i++) {
+	        for(int j=0; j < m.getColumnCount(); j++) {
+	          fw.write(m.getValueAt(i,j).toString()+"\t");
+	        }
+	        fw.write("\n");
+	      }
+	      fw.close();
+	    }
+	    catch(Exception e2){ System.out.println(e2); }
+	  }
+
+	
 	public Seat_Allocation() {
-		
-		
-		
 		
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setBounds(100, 100, 564, 433);
@@ -207,7 +233,7 @@ public class Seat_Allocation extends JFrame {
 		
 	
 		pnlTable = new JPanel();
-		pnlTable.setBounds(21, 107, 321, 276);
+		pnlTable.setBounds(21, 107, 321, 246);
 		contentPane.add(pnlTable);
 		pnlTable.setLayout(new BorderLayout(0, 0));
 		
@@ -226,6 +252,28 @@ public class Seat_Allocation extends JFrame {
 		lblSALC.setHorizontalAlignment(SwingConstants.CENTER);
 		lblSALC.setBounds(103, 83, 133, 14);
 		contentPane.add(lblSALC);
+		
+		JButton btnExcel = new JButton("Generate Excel");
+		btnExcel.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				
+				 if(e.getSource() == btnExcel){
+			           JFileChooser fchoose = new JFileChooser();
+			           int option = fchoose.showSaveDialog(Seat_Allocation.this);
+			           if(option == JFileChooser.APPROVE_OPTION){
+			             String name = fchoose.getSelectedFile().getName(); 
+			             String path = fchoose.getSelectedFile().getParentFile().getPath();
+			             String file = path + "\\" + name + ".xls"; 
+			             export(table, new File(file));
+			           }
+			         }
+			      }
+			
+		});
+		
+		btnExcel.setBackground(new Color(0, 255, 0));
+		btnExcel.setBounds(114, 364, 122, 23);
+		contentPane.add(btnExcel);
 		
 		settableData();
 		declareSeats();
